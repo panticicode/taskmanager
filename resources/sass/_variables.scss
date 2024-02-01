@@ -1,0 +1,40 @@
+// Body
+$body-bg: #f8fafc;
+
+// Typography
+$font-family-sans-serif: 'Nunito', sans-serif;
+$font-size-base: 0.9rem;
+$line-height-base: 1.6;
+
+//Flash Message
+.alert {
+	position: absolute !important;
+    margin-top: -2% !important;
+    width: 67%;
+    margin: 0 auto;
+    left: 16.25%;
+}
+.relative {
+    position:relative;
+}
+.absolute {
+	position:absolute;
+	right: 20.25%;
+    top: 7.75%;
+}
+.absolute-right {
+	margin-top: -3.7%;
+    position: absolute;
+    right: 10%;
+    top: 14.67%;
+}
+.form-control {
+	border-color: #bac1c9 !important
+}
+#logo {
+  flex-direction:column;
+  align-items: center;
+}
+.table-bordered > tbody > tr:not(:last-child) > *:not(caption) {
+    border-width:thin;
+}
