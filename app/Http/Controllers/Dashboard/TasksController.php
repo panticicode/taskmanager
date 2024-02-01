@@ -46,7 +46,9 @@ class TasksController extends Controller
         {
             $request->priority = true;
         }
+
         $task = Task::create([
+            'user_id' => Auth::id(),
             'name' => $request->name
         ]);
         $task->update(['priority' => $task->id]);
@@ -127,7 +129,7 @@ class TasksController extends Controller
                             <input type="hidden" name="_method" value="DELETE">
                             <button type="button" class="btn btn-danger btn-sm mb-2">Delete</button>
                         </form>
-                        <a href="'. url('dashboard/tasks') . '/' . $task->id . '/projects/' . '" class="btn btn-primary btn-sm mb-2 ms-1">Project</a>
+                        <a href="' .  url('dashboard/projects/tasks') . '/' . $task->id . '" class="btn btn-primary btn-sm ms-1 mb-2 d-none">Project</a>
                     </div>    
                 ';
             })

@@ -10,4 +10,9 @@ class Project extends Model
     use HasFactory;
 
     protected $fillable = ['task_id', 'name'];
+
+    public function tasks()
+    {
+    	return $this->belongsTo('App\Models\Task', 'id', 'task_id');
+    }
 }

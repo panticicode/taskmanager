@@ -7,7 +7,7 @@
             <div class="card">
                 <div class="card-header">
                 	{{ __('Tasks') }}
-                	<a href="{{route('dashboard.tasks.index')}}" class="btn btn-sm btn-primary float-end">Tasks</a>
+                	<a href="{{route('dashboard.projects.index')}}" class="btn btn-sm btn-primary float-end">Projects</a>
                 </div>
 
                 <div class="card-body">

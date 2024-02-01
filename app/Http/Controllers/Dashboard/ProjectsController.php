@@ -15,19 +15,34 @@ class ProjectsController extends Controller
     public function __construct()
     {
         $this->middleware(function ($request, $next){
+            $this->id = [];
             $this->projects = Project::orderBy('created_at', 'asc')->get();
             $this->user = Auth::user();
+            $this->tasks = Task::where('user_id', Auth::id())->select('id', 'name')->get();
             return $next($request);
         });
+    }
+    public function getId()
+    {
+        return $this->id;
     }
     /**
      * Display a listing of the resource.
      */
-    public function index($tasks = null)
-    {
+    public function index($tasks=null)
+    {   
+        $this->id = $tasks;
+        
         $projects = $this->projects;
-
-        return view('dashboard.projects.index', compact('projects'));
+        if(is_null($tasks))
+        {
+            $route = route('dashboard.projects.create');
+        }
+        else
+        {
+            $route = url('dashboard/tasks') . '/' . $tasks . '/projects/';
+        }
+        return view('dashboard.projects.index', compact('projects', 'tasks', 'route'));
     }
 
     /**
@@ -37,31 +52,32 @@ class ProjectsController extends Controller
     {
        if(is_null($id))
        {
-            return redirect()->back()->with('warning', 'Please select a task before adding Project.');
+            $route = route('dashboard.projects.store');
+       }
+       else
+       {
+            $route =  url('dashboard/projects') . '/tasks/' . $id;
        }
        $task = Task::find($id);
-       return view('dashboard.projects.create', compact('task'));
+       $tasks = $this->tasks;
+       return view('dashboard.projects.create', compact('task', 'route', 'tasks'));
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(ProjectRequest $request, $id)
+    public function store(ProjectRequest $request, $id=null)
     {
         if($request->priority == "on")
         {
             $request->priority = true;
         }
         $task = Task::find($id);
-        if(is_null($task))
-        {
-            return redirect()->back()->with('warning', 'Please select a task before adding Project.');
-        }
         $project = Project::create([
-            'task_id' => $task->id,
+            'task_id' => $task->id ?? $request->task_id,
             'name' => $request->name
         ]);
-        return redirect()->route('dashboard.projects.index')->with('success', 'Project Created Successfully');
+        return redirect()->back()->with('success', 'Project Created Successfully');
     }
 
     /**
@@ -98,9 +114,17 @@ class ProjectsController extends Controller
     }
     public function project_order(Request $request)
     {
-        $projects = Project::orderBy('id', 'asc');
-        $id = 0; 
-        
+        $id = (int) $request->id;
+
+        if(!$id || is_null($id))
+        {
+            $projects = Project::orderBy('id', 'asc');
+        }
+        else
+        {
+            $projects = Project::where('task_id', $id)->orderBy('id', 'asc');
+        }
+
         if($request->ajax())
         {
             return Datatables::of($projects)

@@ -8,7 +8,7 @@
               <div class="card-header">
                   <div class="d-flex">
                    Project
-                  <a href="{{route('dashboard.projects.create')}}" class="btn btn-sm btn-primary ms-auto me-2">Create</a>
+                  <a href="{{$route}}" class="btn btn-sm btn-primary ms-auto me-2">Create</a>
                   <a href="{{route('dashboard.tasks.index')}}" class="btn btn-sm btn-success">Task</a>
                   </div>
               </div>
@@ -49,7 +49,7 @@
         $.ajax({
           type: "POST", 
           dataType: "json", 
-          url: "{{ url('dashboard/projects/order_change') }}",
+          url: "{{ url('dashboard/projects/order_change?id=' . $tasks) }}",
               data: {
             order: order,
             _token: token
@@ -80,7 +80,7 @@
         processing: true,
         serverSide: true,
         ajax: {
-            url: "{{ route('dashboard.projects_order') }}",
+            url: "{{ route('dashboard.projects_order') }}?id={{$tasks}}",
             data:  (d) => {
                 d.search = $('input[type="search"]').val()
             }

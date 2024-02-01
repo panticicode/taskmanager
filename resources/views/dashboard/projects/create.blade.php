@@ -17,10 +17,10 @@
                         </div>
                     @endif
                     
-                    <form id="createTask" action="{{url('dashboard/projects') . '/tasks/' . $task->id}}" method="post">
+                    <form id="addProject" action="{{$route}}" method="post">
                     	@csrf
 					  	<div class="mb-3">
-					    	<label for="task" class="form-label">Add Project</label>
+					    	<label for="name" class="form-label">Add Project</label>
 					    	<input id="name" type="text" name="name" class="form-control @error('name') is-invalid @enderror" autocomplete="off" value="{{ old('name') }}">
                             @error('name')
                                 <span class="invalid-feedback d-block" role="alert">
@@ -28,6 +28,20 @@
                                 </span>
                             @enderror
 					  	</div>
+                        <div class="mb-3">
+                            <label for="task_id" class="form-label">Task</label>
+                            <select name="task_id" id="task_id" class="form-control">
+                                <option disabled>Chose Task</option>
+                                @foreach($tasks as $task)
+                                    <option value="{{ $task->id }}">{{$task->name}}</option>
+                                @endforeach
+                            </select>
+                            @error('task_id')
+                                <span class="invalid-feedback d-block" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
 					  	<div class="mb-3 form-check">
 					    	<input type="checkbox" class="form-check-input @error('priority') is-invalid @enderror" name="priority" id="priority">
 					    	<label class="form-check-label" for="priority">Priority</label>
@@ -48,7 +62,7 @@
 
 @section('scripts')
 <script type="module" defer>
-    let  $action = $('#addTask').attr('action')
+    let  $action = $('#addProject').attr('action')
     $(() => {
         //$("img").hide()
         $("input[type='file']").on("change", (evt) => {

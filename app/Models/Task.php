@@ -9,7 +9,7 @@ class Task extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['name', 'priority'];
+    protected $fillable = ['user_id', 'name', 'priority'];
     
     public function headerimage($image)
     {
