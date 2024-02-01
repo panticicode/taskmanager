@@ -7,9 +7,9 @@
           <div class="card">
               <div class="card-header">
                   <div class="d-flex">
-                    Task
-                  <a href="{{route('dashboard.tasks.create')}}" class="btn btn-sm btn-primary ms-auto me-2">Create</a>
-                  <a href="{{route('dashboard.projects.index')}}" class="btn btn-sm btn-success">Project</a>
+                   Project
+                  <a href="{{route('dashboard.projects.create')}}" class="btn btn-sm btn-primary ms-auto me-2">Create</a>
+                  <a href="{{route('dashboard.tasks.index')}}" class="btn btn-sm btn-success">Task</a>
                   </div>
               </div>
               <div class="card-body">
@@ -19,7 +19,7 @@
                       <th width="30px">#</th>  
                       <th>Name</th>
                       <th>Created At</th>
-                      <th class="text-center">Action</th>
+                      <th class="text-right">Action</th>
                     </tr>
                   </thead>
                   <tbody id="tableOfContents"></tbody>                  
@@ -49,7 +49,7 @@
         $.ajax({
           type: "POST", 
           dataType: "json", 
-          url: "{{ url('dashboard/tasks/order_change') }}",
+          url: "{{ url('dashboard/projects/order_change') }}",
               data: {
             order: order,
             _token: token
@@ -80,7 +80,7 @@
         processing: true,
         serverSide: true,
         ajax: {
-            url: "{{ route('dashboard.tasks_order') }}",
+            url: "{{ route('dashboard.projects_order') }}",
             data:  (d) => {
                 d.search = $('input[type="search"]').val()
             }
@@ -106,7 +106,7 @@
     })
     $('#search').on('keyup', (evt) => {
         $this = evt.currentTarget
-        table.ajax.url('{{ route("dashboard.tasks_order") }}?search=' + $this.value).draw();
+        table.ajax.url('{{ route("dashboard.projects_order") }}?search=' + $this.value).draw();
     });
     $( "#tableOfContents" ).sortable({
         items: "tr",

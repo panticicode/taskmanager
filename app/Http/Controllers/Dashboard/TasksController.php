@@ -50,7 +50,7 @@ class TasksController extends Controller
             'name' => $request->name
         ]);
         $task->update(['priority' => $task->id]);
-        return redirect()->route('dashboard.tasks.index')->with('success', 'Task Deleted Successfully');
+        return redirect()->route('dashboard.tasks.index')->with('success', 'Task Created Successfully');
     }
 
     /**
@@ -125,8 +125,9 @@ class TasksController extends Controller
                         <form action="'.  route('dashboard.tasks.destroy', $task->id) .'" method="post" class="delete-item">
                             <input type="hidden" name="_token" value="'.csrf_token().'">
                             <input type="hidden" name="_method" value="DELETE">
-                            <button class="btn btn-danger btn-sm mb-2">Delete</button>
+                            <button type="button" class="btn btn-danger btn-sm mb-2">Delete</button>
                         </form>
+                        <a href="'. url('dashboard/tasks') . '/' . $task->id . '/projects/' . '" class="btn btn-primary btn-sm mb-2 ms-1">Project</a>
                     </div>    
                 ';
             })

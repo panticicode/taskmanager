@@ -25,6 +25,10 @@ Route::get('/dashboard', [HomeController::class, 'index'])->name('home');
 Route::group(['middleware' => ['auth'], 'prefix' => 'dashboard', 'as' => 'dashboard.'], function () {
 	Route::get('/tasks/order', [TasksController::class, 'task_order'])->name('tasks_order');
 	Route::post('/tasks/order_change', [TasksController::class, 'task_order_change'])->name('tasks.order_change');
+	Route::get('/tasks/{tasks}/projects', [ProjectsController::class, 'create'])->name('dashboard.tasks.projects');
 	Route::resource('tasks', TasksController::class);
+	Route::get('/projects/order', [ProjectsController::class, 'project_order'])->name('projects_order');
+	Route::post('/projects/order_change', [ProjectsController::class, 'project_order_change'])->name('projects.order_change');
+	Route::post('/projects/tasks/{task}', [ProjectsController::class, 'store'])->name('projects.tasks.store');
 	Route::resource('projects', ProjectsController::class);
 });
