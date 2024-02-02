@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" integrity="sha512-nMNlpuaDPrqlEls3IX/Q56H36qvBASwb3ipuo3MxeWbsQB1881ox0cRv7UPTgBlriqoynt35KjEwgGUeUXIPnw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+@endsection
+
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
@@ -30,7 +34,7 @@
 					  	</div>
                         <div class="mb-3">
                             <label for="task_id" class="form-label">Task</label>
-                            <select name="task_id" id="task_id" class="form-control">
+                            <select id="task_id" class="form-control" name="task_id[]" multiple>
                                 <option disabled>Chose Task</option>
                                 @foreach($tasks as $task)
                                     <option value="{{ $task->id }}">{{$task->name}}</option>
@@ -61,6 +65,7 @@
 @endsection
 
 @section('scripts')
+<script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js" integrity="sha512-2ImtlRlf2VVmiGZsjm9bEyhjGW4dU7B6TNwh/hx/iSByxNENtj3WVE6o/9Lj4TJeVXPi4bnOIMXFIJJAeufa0A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script type="module" defer>
     let  $action = $('#addProject').attr('action')
     $(() => {
@@ -80,7 +85,7 @@
                 reader.readAsDataURL(file)
             }
         })
-        
+        $("#task_id").select2();
     })
 </script>
 @endsection

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Task;
 
 class Project extends Model
 {
@@ -11,8 +12,8 @@ class Project extends Model
 
     protected $fillable = ['task_id', 'name'];
 
-    public function tasks()
+     public function tasks()
     {
-    	return $this->belongsTo('App\Models\Task', 'id', 'task_id');
+        return $this->belongsToMany(Task::class, 'project_tasks');
     }
 }

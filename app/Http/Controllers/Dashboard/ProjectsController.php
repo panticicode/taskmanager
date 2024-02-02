@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Dashboard;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ProjectRequest;
 use Illuminate\Http\Request;
+use App\Models\ProjectTask;
 use App\Models\Project;
 use App\Models\Task;
 use DataTables;
@@ -19,6 +20,7 @@ class ProjectsController extends Controller
             $this->projects = Project::orderBy('created_at', 'asc')->get();
             $this->user = Auth::user();
             $this->tasks = Task::where('user_id', Auth::id())->select('id', 'name')->get();
+            
             return $next($request);
         });
     }
@@ -34,14 +36,8 @@ class ProjectsController extends Controller
         $this->id = $tasks;
         
         $projects = $this->projects;
-        if(is_null($tasks))
-        {
-            $route = route('dashboard.projects.create');
-        }
-        else
-        {
-            $route = url('dashboard/tasks') . '/' . $tasks . '/projects/';
-        }
+        $route = $this->get_url($this->id);
+
         return view('dashboard.projects.index', compact('projects', 'tasks', 'route'));
     }
 
@@ -50,14 +46,7 @@ class ProjectsController extends Controller
      */
     public function create($id=null)
     {
-       if(is_null($id))
-       {
-            $route = route('dashboard.projects.store');
-       }
-       else
-       {
-            $route =  url('dashboard/projects') . '/tasks/' . $id;
-       }
+       $route = $this->get_url($id);
        $task = Task::find($id);
        $tasks = $this->tasks;
        return view('dashboard.projects.create', compact('task', 'route', 'tasks'));
@@ -73,10 +62,19 @@ class ProjectsController extends Controller
             $request->priority = true;
         }
         $task = Task::find($id);
+        $tasks = Task::whereIn('id', $request->task_id)->get();
+
         $project = Project::create([
-            'task_id' => $task->id ?? $request->task_id,
             'name' => $request->name
         ]);
+        foreach ($tasks as $key => $task) 
+        {
+            
+           $projectTask = ProjectTask::create([
+                'task_id' => $task->id ,
+                'project_id' => $project->id
+            ]);
+        }
         return redirect()->back()->with('success', 'Project Created Successfully');
     }
 
@@ -122,8 +120,12 @@ class ProjectsController extends Controller
         }
         else
         {
-            $projects = Project::where('task_id', $id)->orderBy('id', 'asc');
+            $projects = Project::whereHas('tasks', function($query) use ($id) {
+                $query->where('project_id', $id);
+            })->orderBy('id', 'asc');
         }
+       
+        //$projects = $projects->first()->tasks;
 
         if($request->ajax())
         {
@@ -144,8 +146,9 @@ class ProjectsController extends Controller
             ->addColumn('action', function($project)
             {
                 $name = $project->name;
+
                 $delete = route('dashboard.projects.destroy', $project->id);
-                $task = route('dashboard.tasks.index');
+                $task = route('dashboard.projects.task', $project->id);
                 $route = route('dashboard.projects.edit', $project->id);
                 $token = csrf_token();
 
@@ -182,6 +185,82 @@ class ProjectsController extends Controller
         return view('dashboard.projects.index', compact('projects'));
 
     }
+    public function project_task_order(Request $request, $tasks) 
+    {
+        $id = (int) $request->id;
+
+        if(!$id || is_null($id))
+        {
+            $projects = Project::orderBy('id', 'asc');
+        }
+        else
+        {
+            $projects = Project::whereHas('tasks', function($query) use ($id, $tasks) {
+                $query->where('project_id', (int) $tasks);
+            })->orderBy('id', 'asc');
+        }
+        $projectForTasks = Project::find((int) $tasks);
+        $projects = $projectForTasks->tasks ?? [];
+        //$projects = $projects->first()->tasks;
+       
+        if($request->ajax())
+        {
+            return Datatables::of($projects)
+            ->addColumn('row_id', function($project)
+            {
+                return $project->id;
+            })
+            ->editColumn('id', function($project) use (&$id) 
+            {
+                $id++; 
+                return $id;
+            })
+            ->editColumn('created_at', function($project)
+            {
+                return $project->created_at->diffForHumans();
+            })
+            ->addColumn('action', function($project)
+            {
+                $name = $project->name;
+
+                $delete = route('dashboard.projects.destroy', $project->id);
+                $task = route('dashboard.projects.task', $project->id);
+                $route = route('dashboard.projects.edit', $project->id);
+                $token = csrf_token();
+
+                return <<<DELIMITER
+                    <div class="d-flex justify-content-end">
+                        <a href="$route" class="btn btn-warning btn-sm mb-2 me-1">
+                            Edit
+                        </a>
+                        <form action="$delete" method="post" class="delete-item">
+                            <input type="hidden" name="_token" value="$token">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="button" class="btn btn-danger btn-sm mb-2">Delete</button>
+                        </form>
+                        <a href="$task" class="btn btn-primary btn-sm mb-2 ms-1">Task</a>
+                    </div>    
+                DELIMITER;
+            })
+            ->filter(function ($instance) use ($request) {
+                
+                if($request->search)
+                { 
+                    $search = $request->search;
+
+                    $instance->where(function($query) use ($search){
+                        $query->where('id', 'like', '%' . $search . '%');
+                        $query->orWhere('name', 'like', '%' . $search . '%');
+                        $query->orWhereDate('created_at', '=', date('Y-m-d', strtotime($search)));
+                    });
+                }
+            })
+            ->rawColumns(['action'])
+            ->make(true);
+        }
+        $route = '';
+        return view('dashboard.projects.tasks', compact('projects', 'route', 'tasks'));
+    }
     public function project_order_change(Request $request)
     {
         $data = $request->order;
@@ -196,5 +275,27 @@ class ProjectsController extends Controller
             'alert_type' => 'success'
         ]);
     //return response()->json(['success' => $data]);
+    }
+    public function tasks(Request $request, $id)
+    {
+        $tasks = Project::whereHas('tasks', function($query) use ($id){
+            $query->where('project_id', $id);
+        })->get();
+
+        $projects = $tasks;
+        $route = $this->get_url($id);
+        return view('dashboard.projects.tasks', compact('projects', 'tasks', 'route'));
+    }
+    public function get_url($id)
+    {
+        if(is_null($this->tasks))
+        {
+            $route = route('dashboard.projects.create');
+        }
+        else
+        {
+            $route = url('dashboard/tasks') . '/' . $id . '/projects/';
+        }
+        return $route;
     }
 }
