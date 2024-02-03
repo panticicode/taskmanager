@@ -21,7 +21,7 @@
                         </div>
                     @endif
                     
-                    <form id="addProject" action="{{$route}}" method="post">
+                    <form id="addProject" action="{{route('dashboard.projects.store')}}" method="post">
                     	@csrf
 					  	<div class="mb-3">
 					    	<label for="name" class="form-label">Add Project</label>

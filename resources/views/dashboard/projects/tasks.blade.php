@@ -8,8 +8,8 @@
               <div class="card-header">
                   <div class="d-flex">
                    Project
-                  <a href="{{$route}}" class="btn btn-sm btn-primary ms-auto me-2">Create</a>
-                  <a href="{{route('dashboard.tasks.index')}}" class="btn btn-sm btn-success">Task</a>
+                  <a href="{{route('dashboard.projects.create')}}" class="btn btn-sm btn-primary ms-auto me-2">Create</a>
+                  <a href="{{route('dashboard.tasks.index')}}" class="btn btn-sm btn-success">Tasks</a>
                   </div>
               </div>
               <div class="card-body">
@@ -30,7 +30,6 @@
     </div>
 </div>
 
-   
 @endsection
 
 @section('scripts')

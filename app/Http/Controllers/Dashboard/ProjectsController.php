@@ -189,20 +189,20 @@ class ProjectsController extends Controller
     {
         $id = (int) $request->id;
 
+        $projects = Project::query();
         if(!$id || is_null($id))
         {
-            $projects = Project::orderBy('id', 'asc');
+            $projects->orderBy('id', 'asc');
         }
         else
         {
-            $projects = Project::whereHas('tasks', function($query) use ($id, $tasks) {
-                $query->where('project_id', (int) $tasks);
-            })->orderBy('id', 'asc');
+            $projects->whereHas('tasks', function($query) use ($id, $tasks) {
+                $query->where('project_id', (int) $tasks)->tasks;
+            })->orderBy('id', 'asc')->tasks;
         }
-        $projectForTasks = Project::find((int) $tasks);
-        $projects = $projectForTasks->tasks ?? [];
-        //$projects = $projects->first()->tasks;
-       
+        $projects = Project::find((int) $tasks)->tasks->toQuery();
+        
+
         if($request->ajax())
         {
             return Datatables::of($projects)
@@ -225,7 +225,7 @@ class ProjectsController extends Controller
 
                 $delete = route('dashboard.projects.destroy', $project->id);
                 $task = route('dashboard.projects.task', $project->id);
-                $route = route('dashboard.projects.edit', $project->id);
+                $route = route('dashboard.projects.edit', $project->priority);
                 $token = csrf_token();
 
                 return <<<DELIMITER
