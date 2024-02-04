@@ -12,7 +12,8 @@ class Project extends Model
 
     protected $fillable = ['task_id', 'name'];
 
-     public function tasks()
+    
+    public function tasks()
     {
         return $this->belongsToMany(Task::class, 'project_tasks');
     }

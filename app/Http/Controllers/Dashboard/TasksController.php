@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\TaskRequest;
 use Illuminate\Http\Request;
 use App\Models\Task;
+use App\Models\Project;
 use DataTables;
 use Auth;
 
@@ -15,6 +16,7 @@ class TasksController extends Controller
     {
         $this->middleware(function ($request, $next){
             $this->tasks = Task::orderBy('priority', 'asc')->get();
+            $this->projects = Project::orderBy('created_at', 'asc')->get();
             $this->user = Auth::user();
             return $next($request);
         });
@@ -25,8 +27,8 @@ class TasksController extends Controller
     public function index()
     {
         $tasks = $this->tasks;
-
-        return view('dashboard.tasks.index', compact('tasks'));
+        $projects = $this->projects;
+        return view('dashboard.tasks.index', compact('tasks', 'projects'));
     }
 
     /**

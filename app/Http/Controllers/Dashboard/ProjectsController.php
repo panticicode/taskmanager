@@ -204,8 +204,9 @@ class ProjectsController extends Controller
         
 
         if($request->ajax())
-        {
+        {  
             return Datatables::of($projects)
+            //datatables()->eloquent($projects)
             ->addColumn('row_id', function($project)
             {
                 return $project->id;
@@ -219,13 +220,13 @@ class ProjectsController extends Controller
             {
                 return $project->created_at->diffForHumans();
             })
-            ->addColumn('action', function($project)
+            ->addColumn('action', function($project) use (&$id)
             {
                 $name = $project->name;
-
+           
                 $delete = route('dashboard.projects.destroy', $project->id);
-                $task = route('dashboard.projects.task', $project->id);
-                $route = route('dashboard.projects.edit', $project->priority);
+                $task = route('dashboard.projects.task', $id+1);
+                $route = route('dashboard.projects.edit', $project->id);
                 $token = csrf_token();
 
                 return <<<DELIMITER
@@ -253,12 +254,13 @@ class ProjectsController extends Controller
                         $query->orWhere('name', 'like', '%' . $search . '%');
                         $query->orWhereDate('created_at', '=', date('Y-m-d', strtotime($search)));
                     });
-                }
+                } 
             })
             ->rawColumns(['action'])
             ->make(true);
         }
-        $route = '';
+        $route = ''; 
+        $projects = $this->projects;
         return view('dashboard.projects.tasks', compact('projects', 'route', 'tasks'));
     }
     public function project_order_change(Request $request)
@@ -274,16 +276,15 @@ class ProjectsController extends Controller
             'message' => $request->session()->get('success'),
             'alert_type' => 'success'
         ]);
-    //return response()->json(['success' => $data]);
     }
     public function tasks(Request $request, $id)
     {
         $tasks = Project::whereHas('tasks', function($query) use ($id){
             $query->where('project_id', $id);
         })->get();
-
         $projects = $tasks;
         $route = $this->get_url($id);
+  
         return view('dashboard.projects.tasks', compact('projects', 'tasks', 'route'));
     }
     public function get_url($id)
@@ -298,4 +299,5 @@ class ProjectsController extends Controller
         }
         return $route;
     }
+    
 }

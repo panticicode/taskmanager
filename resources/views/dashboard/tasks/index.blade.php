@@ -8,6 +8,12 @@
               <div class="card-header">
                   <div class="d-flex">
                     Task
+                    <select id="project" class="form-select form-select-sm w-50 ms-3" name="assign">
+                      <option disabled selected>Choose Project</option>
+                      @foreach($projects as $project)
+                        <option value="{{$project->id}}">{{$project->name}}</option>
+                      @endforeach
+                   </select>
                   <a href="{{route('dashboard.tasks.create')}}" class="btn btn-sm btn-primary ms-auto me-2">Create</a>
                   <a href="{{route('dashboard.projects.index')}}" class="btn btn-sm btn-success">Project</a>
                   </div>
@@ -82,7 +88,8 @@
         ajax: {
             url: "{{ route('dashboard.tasks_order') }}",
             data:  (d) => {
-                d.search = $('input[type="search"]').val()
+                d.search = $('input[type="search"]').val(),
+                d.assign = $('select[name="assign"]').val()
             }
         },
         columns: [
@@ -94,6 +101,9 @@
         search: {
             input: '#search'
         },
+        assign : {
+            input: '#project'
+        },
         columnDefs: [{
             targets: [2, 3]
         }],
@@ -102,6 +112,11 @@
         },
         initComplete:  () => {
             $('input[type="search"]').attr('id', 'search');
+
+            $('#project').on('change', (evt) => {
+                var $this = evt.currentTarget
+                table.ajax.url('{{ url("dashboard/projects/tasks") }}' + '/' + $this.value).draw();
+            });
         }
     })
     $('#search').on('keyup', (evt) => {

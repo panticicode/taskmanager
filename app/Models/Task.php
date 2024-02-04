@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\ProjectTask;
+use App\Models\Project;
 
 class Task extends Model
 {
@@ -61,5 +63,14 @@ class Task extends Model
     {
         $folder = $this->uploads;
         return public_path() . '/images/pages/visas/sidebar/' . $image;
+    }
+    
+    public function project_tasks()
+    {
+        return $this->belongsToMany(Project::class, 'project_tasks', 'task_id', 'project_id');
+    }
+    public function tasks()
+    {
+        return $this->belongsToMany(Task::class, 'project_tasks', 'project_id', 'task_id');
     }
 }

@@ -8,6 +8,12 @@
               <div class="card-header">
                   <div class="d-flex">
                    Project
+                   <select id="project" class="form-select form-select-sm w-50 ms-3" name="assign">
+                      <option disabled selected>Choose Project</option>
+                      @foreach($projects as $project)
+                        <option value="{{$project->id}}">{{$project->name}}</option>
+                      @endforeach
+                   </select>
                   <a href="{{route('dashboard.projects.create')}}" class="btn btn-sm btn-primary ms-auto me-2">Create</a>
                   <a href="{{route('dashboard.tasks.index')}}" class="btn btn-sm btn-success">Tasks</a>
                   </div>
@@ -82,6 +88,7 @@
             url: "{{ route('dashboard.projects.task.order', $tasks) }}",
             data:  (d) => {
                 d.search = $('input[type="search"]').val()
+                d.assign = $('select[name="assign"]').val()
             }
         },
         columns: [
@@ -91,7 +98,10 @@
             {data: 'action', name: 'action', className: ['text-center', 'mx-auto', 'px-0', 'btn-width']},
         ],
         search: {
-            input: '#search'
+            input: '#search',
+        },
+        assign : {
+            input: '#project'
         },
         columnDefs: [{
             targets: [2, 3]
@@ -99,8 +109,15 @@
         rowCallback: (row, data) => {
             $(row).attr('data-id', data.row_id); 
         },
-        initComplete:  () => {
+        initComplete:  (settings, json) => {
             $('input[type="search"]').attr('id', 'search');
+
+            //console.log(json)
+            // Filter results on select change
+            $('#project').on('change', (evt) => {
+                var $this = evt.currentTarget
+                table.ajax.url('{{ url("dashboard/projects/tasks") }}' + '/' + $this.value).draw();
+            });
         }
     })
     $('#search').on('keyup', (evt) => {
