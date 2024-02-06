@@ -69,8 +69,18 @@ class Task extends Model
     {
         return $this->belongsToMany(Project::class, 'project_tasks', 'task_id', 'project_id');
     }
+    public function project_task()
+    {
+        return $this->belongsTo(ProjectTask::class, 'id', 'task_id');
+    }
     public function tasks()
     {
         return $this->belongsToMany(Task::class, 'project_tasks', 'project_id', 'task_id');
+    }
+    public function project($task_id, $project_id)
+    {
+        return $this->belongsToMany(Project::class, 'project_tasks')
+                    ->wherePivot('task_id', $task_id)
+                    ->wherePivot('project_id', $project_id); 
     }
 }

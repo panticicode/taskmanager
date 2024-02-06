@@ -62,7 +62,8 @@ class ProjectsController extends Controller
             $request->priority = true;
         }
         $task = Task::find($id);
-        $tasks = Task::whereIn('id', $request->task_id)->get();
+
+        $tasks = Task::whereIn('id', $request->task_id ?? [])->get();
 
         $project = Project::create([
             'name' => $request->name
@@ -71,6 +72,7 @@ class ProjectsController extends Controller
         {
             
            $projectTask = ProjectTask::create([
+                'user_id' => Auth::id(),
                 'task_id' => $task->id ,
                 'project_id' => $project->id
             ]);
@@ -107,8 +109,29 @@ class ProjectsController extends Controller
      */
     public function destroy(Request $request, Project $project)
     {
-        $project->delete();
-        return redirect()->back()->with('danger', 'Project Deleted Successfully');
+        $session = 'danger';
+        if($request->has('tasks'))
+        {
+            $projectTask =  ProjectTask::where('project_id', $project->id)
+                                ->where('task_id', (int) $request->tasks)->withTrashed();
+            if($projectTask->first()->trashed())
+            {
+                $projectTask->restore();
+                $message = 'Task Restored Successfully';
+                $session = 'success';
+            }    
+            else
+            {
+                $projectTask->delete();
+                $message = 'Task Deleted Successfully';
+            }                   
+        }
+        else
+        {
+            $message = 'Project Deleted Successfully';
+            $project->delete();
+        }
+        return redirect()->back()->with($session, $message);
     }
     public function project_order(Request $request)
     {
@@ -143,7 +166,7 @@ class ProjectsController extends Controller
             {
                 return $project->created_at->diffForHumans();
             })
-            ->addColumn('action', function($project)
+            ->addColumn('action', function($project) 
             {
                 $name = $project->name;
 
@@ -185,7 +208,7 @@ class ProjectsController extends Controller
         return view('dashboard.projects.index', compact('projects'));
 
     }
-    public function project_task_order(Request $request, $tasks) 
+    public function project_task_order(Request $request, $projectId) 
     {
         $id = (int) $request->id;
 
@@ -197,38 +220,55 @@ class ProjectsController extends Controller
         else
         {
             $projects->whereHas('tasks', function($query) use ($id, $tasks) {
-                $query->where('project_id', (int) $tasks)->tasks;
+                $query->where('project_id', (int) $projectId)->tasks;
             })->orderBy('id', 'asc')->tasks;
         }
-        $projects = Project::find((int) $tasks)->tasks->toQuery();
+     
+        $project = Project::find((int) $projectId); 
+
+        //Check if Project Exist or Not Exmpty
         
+        $tasks = is_null($project) || $project->tasks->isEmpty() ? [] : $project->tasks->toQuery();
+        
+        $taskId = 1;
 
         if($request->ajax())
         {  
-            return Datatables::of($projects)
+            return Datatables::of($tasks)
             //datatables()->eloquent($projects)
-            ->addColumn('row_id', function($project)
+            ->addColumn('row_id', function($task)
             {
-                return $project->id;
+                return $task->id;
             })
-            ->editColumn('id', function($project) use (&$id) 
+            ->editColumn('id', function($task) use (&$taskId) 
             {
-                $id++; 
-                return $id;
+                return $taskId++;
             })
-            ->editColumn('created_at', function($project)
+            ->editColumn('task', function($task) use (&$taskId) 
             {
-                return $project->created_at->diffForHumans();
+                return $task->name;
             })
-            ->addColumn('action', function($project) use (&$id)
+            ->editColumn('created_at', function($task)
             {
-                $name = $project->name;
-           
-                $delete = route('dashboard.projects.destroy', $project->id);
-                $task = route('dashboard.projects.task', $id+1);
-                $route = route('dashboard.projects.edit', $project->id);
-                $token = csrf_token();
+                return $task->created_at->diffForHumans();
+            })
+            ->editColumn('deleted_at', function($td)
+            {
+                return $td->deleted_at ? $td->deleted_at->diffForHumans() : [];
+            })
+            ->addColumn('action', function($task) use (&$id, $projectId)
+            {
+                $name = $task->name;
+                $id = (int) $projectId;
 
+                $delete = route('dashboard.projects.destroy', ['project' => $projectId, 'tasks' => $task->id]);
+               
+                $manage = route('dashboard.projects.task.manage', ['project' => $id]);
+          
+                $route = route('dashboard.projects.edit', $task->id);
+              
+                $token = csrf_token();
+                 
                 return <<<DELIMITER
                     <div class="d-flex justify-content-end">
                         <a href="$route" class="btn btn-warning btn-sm mb-2 me-1">
@@ -239,12 +279,13 @@ class ProjectsController extends Controller
                             <input type="hidden" name="_method" value="DELETE">
                             <button type="button" class="btn btn-danger btn-sm mb-2">Delete</button>
                         </form>
-                        <a href="$task" class="btn btn-primary btn-sm mb-2 ms-1">Task</a>
+                        <a href="$manage" class="btn btn-primary btn-sm mb-2 ms-1">Task</a>
                     </div>    
                 DELIMITER;
+
             })
             ->filter(function ($instance) use ($request) {
-                
+            
                 if($request->search)
                 { 
                     $search = $request->search;
@@ -261,7 +302,7 @@ class ProjectsController extends Controller
         }
         $route = ''; 
         $projects = $this->projects;
-        return view('dashboard.projects.tasks', compact('projects', 'route', 'tasks'));
+        return view('dashboard.projects.tasks', compact('projects', 'route', 'projectId', 'project'));
     }
     public function project_order_change(Request $request)
     {
@@ -286,6 +327,96 @@ class ProjectsController extends Controller
         $route = $this->get_url($id);
   
         return view('dashboard.projects.tasks', compact('projects', 'tasks', 'route'));
+    }
+    public function project_tasks(Request $request, Project $project)
+    {
+        $projectId = $project->id;
+       
+        $tasks = ProjectTask::where('project_id', $project->id)->withTrashed();
+ 
+        $taskId = 1;
+        if($request->ajax())
+        {  
+
+            return Datatables::of($tasks)
+            //datatables()->eloquent($projects)
+            ->addColumn('row_id', function($td) use ($project)
+            {    
+                return $td->id;
+            })
+            ->editColumn('id', function($td) use (&$taskId) 
+            {
+                return $taskId++;
+            })
+            ->editColumn('task', function($td)
+            {
+                return $td->task->name;
+            })
+            ->editColumn('created_at', function($td)
+            {
+                return $td->created_at->diffForHumans();
+            })
+            ->editColumn('deleted_at', function($td)
+            {
+                return $td->deleted_at ? $td->deleted_at->diffForHumans() : [];
+            })
+            ->addColumn('action', function($td) use (&$id, $projectId)
+            {
+                $name = $td->task->name;
+                $id = (int) $projectId;
+
+                $delete = route('dashboard.projects.destroy', ['project' => $projectId, 'tasks' => $td->task->id]);
+               
+                $manage = '#';//route('dashboard.projects.task.manage', ['project' => $id]);
+          
+                $route = route('dashboard.projects.edit', $td->task->id);
+              
+                $token = csrf_token();
+                if($td->trashed())
+                {
+                    $class = 'btn-success px-1';
+                    $btn = 'Restore';
+                }
+                else
+                {
+                    $class = 'btn-danger px-2';
+                    $btn = 'Delete';
+                }
+                
+                return <<<DELIMITER
+                    <div class="d-flex justify-content-end">
+                        <a href="$route" class="btn btn-warning btn-sm mb-2 me-1">
+                            Edit
+                        </a>
+                        <form action="$delete" method="post" class="delete-item">
+                            <input type="hidden" name="_token" value="$token">
+                            <input type="hidden" name="_method" value="DELETE">
+                            <button type="button" class="btn $class btn-sm mb-2">$btn</button>
+                        </form>
+                        <a href="$manage" class="btn btn-primary btn-sm mb-2 ms-1">Task</a>
+                    </div>    
+                DELIMITER;
+
+            })
+            ->filter(function ($instance) use ($request) {
+                
+                if($request->search)
+                { 
+                    $search = $request->search;
+
+                    $instance->where(function($query) use ($search){
+                        $query->where('id', 'like', '%' . $search . '%');
+                        $query->orWhere('name', 'like', '%' . $search . '%');
+                        $query->orWhereDate('created_at', '=', date('Y-m-d', strtotime($search)));
+                    });
+                } 
+            })
+            ->rawColumns(['action'])
+            ->make(true);
+        }
+        $route = ''; 
+        $projects = $this->projects;
+        return view('dashboard.tasks.projects', compact('projects', 'route', 'projectId', 'project'));
     }
     public function get_url($id)
     {

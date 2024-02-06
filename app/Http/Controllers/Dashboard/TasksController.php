@@ -88,7 +88,8 @@ class TasksController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy(Request $request, Task $task)
-    {
+    {   
+        //$task->project_tasks->first()->pivot->update(['task_id' => false]);
         $task->delete();
         return redirect()->back()->with('danger', 'Task Deleted Successfully');
     }
