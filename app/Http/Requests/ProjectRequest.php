@@ -22,7 +22,8 @@ class ProjectRequest extends FormRequest
      public function rules(): array
     {
         return [
-            'name' => 'required|min:3|regex:/^[A-Z][\w\s]+$/'
+            'name' => 'required|min:3|regex:/^[A-Z][\w\s]+$/',
+            'task_id' => 'required|array|min:1'
         ];
     }
     /**
@@ -35,7 +36,8 @@ class ProjectRequest extends FormRequest
         return [
             'name.required' => 'The name field is required.',
             'name.min' => 'The name field must be at least :min characters.',
-            'name.regex' => 'The name field must start with a capital letter and may only contain letters, numbers, spaces, and underscores.'
+            'name.regex' => 'The name field must start with a capital letter and may only contain letters, numbers, spaces, and underscores.',
+            'task_id.required' => 'The task field is required.'
         ];
     }
 }
