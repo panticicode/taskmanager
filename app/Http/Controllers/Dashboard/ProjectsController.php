@@ -93,15 +93,46 @@ class ProjectsController extends Controller
      */
     public function edit(string $id)
     {
-        //
+       $route = $this->get_url($id);
+
+       $project = Project::find($id);
+       $tasks = $this->tasks; 
+       $taskIds = $project->project_tasks->pluck('task_id', 'id')->toArray();
+       return view('dashboard.projects.edit', compact('project', 'route', 'tasks', 'taskIds'));
     }
 
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(ProjectRequest $request, string $id)
     {
-        //
+        $project = Project::find($id);
+        
+        $project->update([
+            'name' => $request->name
+        ]);
+
+        
+        
+
+        
+        if($request->has('task_id')) 
+        {   
+            //Get Ids From relations table
+            $ids = array_values($project->tasks()->whereHas('project_task', function($query){})->pluck('task_id', 'task_id')->toArray());
+            //Delete Current Tasks  
+            $project->tasks()->detach($ids);
+         
+            $tasks = $request->task_id;
+
+            //Add New Tasks
+            foreach($tasks as $task_id) 
+            {
+                $project->tasks()->attach($task_id, ['user_id' => Auth::id(), 'created_at' => now(), 'updated_at' => now()]);
+            }
+        }
+
+        return redirect()->back()->with('success', 'Project Created Successfully');
     }
 
     /**
@@ -226,10 +257,17 @@ class ProjectsController extends Controller
      
         $project = Project::find((int) $projectId); 
 
-        //Check if Project Exist or Not Exmpty
+        //Check if Project Exist or Not Empty
         
-        $tasks = is_null($project) || $project->tasks->isEmpty() ? [] : $project->tasks->toQuery();
-        
+        if($project->tasks->isEmpty())
+        {
+            $tasks = [];
+        }
+        else
+        {
+            $tasks = $project->tasks()->whereHas('project_task', function($query){})->get()->toQuery();
+        }
+
         $taskId = 1;
 
         if($request->ajax())
@@ -237,7 +275,7 @@ class ProjectsController extends Controller
             return Datatables::of($tasks)
             //datatables()->eloquent($projects)
             ->addColumn('row_id', function($task)
-            {
+            {   
                 return $task->id;
             })
             ->editColumn('id', function($task) use (&$taskId) 
@@ -279,7 +317,6 @@ class ProjectsController extends Controller
                             <input type="hidden" name="_method" value="DELETE">
                             <button type="button" class="btn btn-danger btn-sm mb-2">Delete</button>
                         </form>
-                        <a href="$manage" class="btn btn-primary btn-sm mb-2 ms-1">Task</a>
                     </div>    
                 DELIMITER;
 
@@ -325,7 +362,7 @@ class ProjectsController extends Controller
         })->get();
         $projects = $tasks;
         $route = $this->get_url($id);
-  
+       
         return view('dashboard.projects.tasks', compact('projects', 'tasks', 'route'));
     }
     public function project_tasks(Request $request, Project $project)
@@ -393,7 +430,6 @@ class ProjectsController extends Controller
                             <input type="hidden" name="_method" value="DELETE">
                             <button type="button" class="btn $class btn-sm mb-2">$btn</button>
                         </form>
-                        <a href="$manage" class="btn btn-primary btn-sm mb-2 ms-1">Task</a>
                     </div>    
                 DELIMITER;
 

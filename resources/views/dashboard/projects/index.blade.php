@@ -19,7 +19,7 @@
                       <th width="30px">#</th>  
                       <th>Name</th>
                       <th>Created At</th>
-                      <th class="text-right">Action</th>
+                      <th class="d-flex justify-content-center">Action</th>
                     </tr>
                   </thead>
                   <tbody id="tableOfContents"></tbody>                  

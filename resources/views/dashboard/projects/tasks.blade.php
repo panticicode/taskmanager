@@ -25,11 +25,7 @@
                       <th width="30px">#</th>  
                       <th>Name</th>
                       <th>Created At</th>
-                      <th class="d-flex justent center">
-                        <div></div>
-                        <div>Action</div>
-                        <div></div>
-                      </th>
+                      <th class="d-flex justify-content-center">Action</th>
                     </tr>
                   </thead>
                   <tbody id="tableOfContents"></tbody>                  
