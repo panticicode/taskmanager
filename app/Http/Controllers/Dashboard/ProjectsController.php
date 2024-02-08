@@ -254,7 +254,7 @@ class ProjectsController extends Controller
                 $query->where('project_id', (int) $projectId)->tasks;
             })->orderBy('id', 'asc')->tasks;
         }
-     
+
         $project = Project::find((int) $projectId); 
 
         //Check if Project Exist or Not Empty
@@ -265,7 +265,7 @@ class ProjectsController extends Controller
         }
         else
         {
-            $tasks = $project->tasks()->whereHas('project_task', function($query){})->get()->toQuery();
+            $tasks = $project->project_task()->get()->toQuery();
         }
 
         $taskId = 1;
@@ -276,34 +276,34 @@ class ProjectsController extends Controller
             //datatables()->eloquent($projects)
             ->addColumn('row_id', function($task)
             {   
-                return $task->id;
+                return $task->task->id;
             })
             ->editColumn('id', function($task) use (&$taskId) 
             {
                 return $taskId++;
             })
-            ->editColumn('task', function($task) use (&$taskId) 
+            ->editColumn('name', function($task) use (&$taskId) 
             {
-                return $task->name;
+                return $task->task->name;
             })
             ->editColumn('created_at', function($task)
             {
-                return $task->created_at->diffForHumans();
+                return $task->task->created_at->diffForHumans();
             })
             ->editColumn('deleted_at', function($td)
             {
-                return $td->deleted_at ? $td->deleted_at->diffForHumans() : [];
+                return $td->task->deleted_at ? $td->task->deleted_at->diffForHumans() : [];
             })
             ->addColumn('action', function($task) use (&$id, $projectId)
             {
-                $name = $task->name;
+                $name = $task->task->name;
                 $id = (int) $projectId;
 
-                $delete = route('dashboard.projects.destroy', ['project' => $projectId, 'tasks' => $task->id]);
+                $delete = route('dashboard.projects.destroy', ['project' => $projectId, 'tasks' => $task->task->id]);
                
                 $manage = route('dashboard.projects.task.manage', ['project' => $id]);
           
-                $route = route('dashboard.projects.edit', $task->id);
+                $route = route('dashboard.projects.edit', $task->task->id);
               
                 $token = csrf_token();
                  
