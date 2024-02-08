@@ -29,6 +29,11 @@ Route::group(['middleware' => ['auth'], 'prefix' => 'dashboard', 'as' => 'dashbo
 	Route::resource('tasks', TasksController::class);
 	Route::get('/projects/order', [ProjectsController::class, 'project_order'])->name('projects_order');
 	Route::post('/projects/order_change', [ProjectsController::class, 'project_order_change'])->name('projects.order_change');
+	Route::get('/projects/tasks/{projectId}', [ProjectsController::class, 'project_task_order'])->name('projects.task.order');
+	Route::get('/projects/tasks/{task}', [ProjectsController::class, 'tasks'])->name('projects.task');
 	Route::post('/projects/tasks/{task}', [ProjectsController::class, 'store'])->name('projects.tasks.store');
+	Route::get('/projects/task-projects/{task}', [ProjectsController::class, 'get_tasks'])->name('projects.get.task');
+	Route::get('/projects/{project}/tasks', [ProjectsController::class, 'project_tasks'])->name('projects.task.manage');
+	Route::post('/projects/redirect', [ProjectsController::class, 'redirect'])->name('projects.redirect');
 	Route::resource('projects', ProjectsController::class);
 });

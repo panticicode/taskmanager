@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\TaskRequest;
 use Illuminate\Http\Request;
 use App\Models\Task;
+use App\Models\Project;
 use DataTables;
 use Auth;
 
@@ -15,6 +16,7 @@ class TasksController extends Controller
     {
         $this->middleware(function ($request, $next){
             $this->tasks = Task::orderBy('priority', 'asc')->get();
+            $this->projects = Project::orderBy('created_at', 'asc')->get();
             $this->user = Auth::user();
             return $next($request);
         });
@@ -25,8 +27,8 @@ class TasksController extends Controller
     public function index()
     {
         $tasks = $this->tasks;
-
-        return view('dashboard.tasks.index', compact('tasks'));
+        $projects = $this->projects;
+        return view('dashboard.tasks.index', compact('tasks', 'projects'));
     }
 
     /**
@@ -46,7 +48,9 @@ class TasksController extends Controller
         {
             $request->priority = true;
         }
+
         $task = Task::create([
+            'user_id' => Auth::id(),
             'name' => $request->name
         ]);
         $task->update(['priority' => $task->id]);
@@ -84,7 +88,8 @@ class TasksController extends Controller
      * Remove the specified resource from storage.
      */
     public function destroy(Request $request, Task $task)
-    {
+    {   
+        //$task->project_tasks->first()->pivot->update(['task_id' => false]);
         $task->delete();
         return redirect()->back()->with('danger', 'Task Deleted Successfully');
     }
@@ -127,7 +132,7 @@ class TasksController extends Controller
                             <input type="hidden" name="_method" value="DELETE">
                             <button type="button" class="btn btn-danger btn-sm mb-2">Delete</button>
                         </form>
-                        <a href="'. url('dashboard/tasks') . '/' . $task->id . '/projects/' . '" class="btn btn-primary btn-sm mb-2 ms-1">Project</a>
+                        <a href="' .  url('dashboard/projects/tasks') . '/' . $task->id . '" class="btn btn-primary btn-sm ms-1 mb-2 d-none">Project</a>
                     </div>    
                 ';
             })

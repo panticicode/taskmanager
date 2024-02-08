@@ -8,8 +8,14 @@
               <div class="card-header">
                   <div class="d-flex">
                    Project
-                  <a href="{{route('dashboard.projects.create')}}" class="btn btn-sm btn-primary ms-auto me-2">Create</a>
-                  <a href="{{route('dashboard.tasks.index')}}" class="btn btn-sm btn-success">Task</a>
+                   <select id="project" class="form-select form-select-sm w-50 ms-3" name="assign">
+                      <option disabled selected>Choose Project</option>
+                      @foreach($projects as $elem)
+                        <option value="{{$elem->id}}">{{$elem->name}}</option>
+                      @endforeach
+                   </select>
+                  <a href="{{route('dashboard.projects.task.manage', ['project' => $project->id])}}" class="btn btn-sm btn-primary ms-auto me-2">Manage</a>
+                  <a href="{{route('dashboard.projects.index')}}" class="btn btn-sm btn-success">Projects</a>
                   </div>
               </div>
               <div class="card-body">
@@ -30,7 +36,6 @@
     </div>
 </div>
 
-   
 @endsection
 
 @section('scripts')
@@ -49,7 +54,7 @@
         $.ajax({
           type: "POST", 
           dataType: "json", 
-          url: "{{ url('dashboard/projects/order_change?id=' . $tasks) }}",
+          url: "{{ url('dashboard/projects/order_change?id=' . $projectId) }}",
               data: {
             order: order,
             _token: token
@@ -80,9 +85,10 @@
         processing: true,
         serverSide: true,
         ajax: {
-            url: "{{ route('dashboard.projects_order') }}?id={{$tasks}}",
+            url: "{{ route('dashboard.projects.task.order', $projectId) }}",
             data:  (d) => {
                 d.search = $('input[type="search"]').val()
+                d.assign = $('select[name="assign"]').val()
             }
         },
         columns: [
@@ -92,7 +98,10 @@
             {data: 'action', name: 'action', className: ['text-center', 'mx-auto', 'px-0', 'btn-width']},
         ],
         search: {
-            input: '#search'
+            input: '#search',
+        },
+        assign : {
+            input: '#project'
         },
         columnDefs: [{
             targets: [2, 3]
@@ -100,8 +109,15 @@
         rowCallback: (row, data) => {
             $(row).attr('data-id', data.row_id); 
         },
-        initComplete:  () => {
+        initComplete:  (settings, json) => {
             $('input[type="search"]').attr('id', 'search');
+
+            //console.log(json)
+            // Filter results on select change
+            $('#project').on('change', (evt) => {
+                var $this = evt.currentTarget
+                table.ajax.url('{{ url("dashboard/projects/tasks") }}' + '/' + $this.value).draw();
+            });
         }
     })
     $('#search').on('keyup', (evt) => {

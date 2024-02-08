@@ -1,5 +1,9 @@
 @extends('layouts.app')
 
+@section('styles')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" integrity="sha512-nMNlpuaDPrqlEls3IX/Q56H36qvBASwb3ipuo3MxeWbsQB1881ox0cRv7UPTgBlriqoynt35KjEwgGUeUXIPnw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+@endsection
+
 @section('content')
 <div class="container">
     <div class="row justify-content-center">
@@ -17,10 +21,10 @@
                         </div>
                     @endif
                     
-                    <form id="createTask" action="{{url('dashboard/projects') . '/tasks/' . $task->id}}" method="post">
+                    <form id="addProject" action="{{route('dashboard.projects.store')}}" method="post">
                     	@csrf
 					  	<div class="mb-3">
-					    	<label for="task" class="form-label">Add Project</label>
+					    	<label for="name" class="form-label">Add Project</label>
 					    	<input id="name" type="text" name="name" class="form-control @error('name') is-invalid @enderror" autocomplete="off" value="{{ old('name') }}">
                             @error('name')
                                 <span class="invalid-feedback d-block" role="alert">
@@ -28,6 +32,20 @@
                                 </span>
                             @enderror
 					  	</div>
+                        <div class="mb-3">
+                            <label for="task_id" class="form-label">Task</label>
+                            <select id="task_id" class="form-control" name="task_id[]" multiple>
+                                <option disabled>Chose Task</option>
+                                @foreach($tasks as $task)
+                                    <option value="{{ $task->id }}">{{$task->name}}</option>
+                                @endforeach
+                            </select>
+                            @error('task_id')
+                                <span class="invalid-feedback d-block" role="alert">
+                                    <strong>{{ $message }}</strong>
+                                </span>
+                            @enderror
+                        </div>
 					  	<div class="mb-3 form-check">
 					    	<input type="checkbox" class="form-check-input @error('priority') is-invalid @enderror" name="priority" id="priority">
 					    	<label class="form-check-label" for="priority">Priority</label>
@@ -47,8 +65,9 @@
 @endsection
 
 @section('scripts')
+<script type="module" src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js" integrity="sha512-2ImtlRlf2VVmiGZsjm9bEyhjGW4dU7B6TNwh/hx/iSByxNENtj3WVE6o/9Lj4TJeVXPi4bnOIMXFIJJAeufa0A==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <script type="module" defer>
-    let  $action = $('#addTask').attr('action')
+    let  $action = $('#addProject').attr('action')
     $(() => {
         //$("img").hide()
         $("input[type='file']").on("change", (evt) => {
@@ -66,7 +85,7 @@
                 reader.readAsDataURL(file)
             }
         })
-        
+        $("#task_id").select2();
     })
 </script>
 @endsection

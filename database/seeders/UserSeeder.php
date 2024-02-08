@@ -18,6 +18,7 @@ class UserSeeder extends Seeder
         $users = [
             [
                 'name' => 'Admin',
+                'role' => true,
                 'email' => 'admin@tasks.local',
                 'password' => bcrypt('123123123'),
                 'email_verified_at' => now()

@@ -8,18 +8,25 @@
               <div class="card-header">
                   <div class="d-flex">
                    Project
+                   <select id="project" class="form-select form-select-sm w-50 ms-3" name="assign">
+                      <option disabled selected>Choose Project</option>
+                      @foreach($projects as $item)
+                        <option value="{{$item->id}}">{{$item->name}}</option>
+                      @endforeach
+                   </select>
                   <a href="{{route('dashboard.projects.create')}}" class="btn btn-sm btn-primary ms-auto me-2">Create</a>
-                  <a href="{{route('dashboard.tasks.index')}}" class="btn btn-sm btn-success">Task</a>
+                  <a href="{{route('dashboard.projects.index')}}" class="btn btn-sm btn-success">Projects</a>
                   </div>
               </div>
               <div class="card-body">
                  <table class="table table-bordered">
                   <thead>
                     <tr>
-                      <th width="30px">#</th>  
-                      <th>Name</th>
-                      <th>Created At</th>
-                      <th class="d-flex justify-content-center">Action</th>
+                      <th>#</th>  
+                      <th>Task</th>
+                      <th>Created</th>
+                      <th>Deleted</th>
+                      <th class="d-flex justent center">Action</th>
                     </tr>
                   </thead>
                   <tbody id="tableOfContents"></tbody>                  
@@ -29,8 +36,6 @@
         </div>
     </div>
 </div>
-
-   
 @endsection
 
 @section('scripts')
@@ -49,7 +54,7 @@
         $.ajax({
           type: "POST", 
           dataType: "json", 
-          url: "{{ url('dashboard/projects/order_change?id=' . $tasks) }}",
+          url: "{{route('dashboard.projects.task.manage', $project->id)}}",
               data: {
             order: order,
             _token: token
@@ -80,28 +85,41 @@
         processing: true,
         serverSide: true,
         ajax: {
-            url: "{{ route('dashboard.projects_order') }}?id={{$tasks}}",
+            url: "{{ route('dashboard.projects.task.manage', ['project' => $project->id]) }}",
             data:  (d) => {
                 d.search = $('input[type="search"]').val()
+                d.assign = $('select[name="assign"]').val()
             }
         },
         columns: [
             {data: 'id', name: 'id'},
-            {data: 'name', name: 'name'},
+            {data: 'task', name: 'task'},
             {data: 'created_at', name: 'created_at'},
+            {data: 'deleted_at', name: 'deleted_at'},
             {data: 'action', name: 'action', className: ['text-center', 'mx-auto', 'px-0', 'btn-width']},
         ],
         search: {
-            input: '#search'
+            input: '#search',
+        },
+        assign : {
+            input: '#project'
         },
         columnDefs: [{
-            targets: [2, 3]
+            targets: [2, 3, 4]
         }],
         rowCallback: (row, data) => {
             $(row).attr('data-id', data.row_id); 
         },
-        initComplete:  () => {
+        initComplete:  (settings, json) => {
             $('input[type="search"]').attr('id', 'search');
+
+            //console.log(json)
+            // Filter results on select change
+            $('#project').on('change', (evt) => {
+                var $this = evt.currentTarget
+
+                table.ajax.url('{{ url("dashboard/projects/tasks") }}' + '/' + $this.value).draw();
+            });
         }
     })
     $('#search').on('keyup', (evt) => {
@@ -121,7 +139,7 @@
     $(document).on("click", ".delete-item button", (evt) => {
         let $this = evt.currentTarget
         
-        if(confirm('Are you sure you want to delete this record?'))
+        if(confirm('Are you sure you want to ' + $($this).text().toLowerCase() + ' this record?'))
         {
             $($this).parent().submit()
             return true;
