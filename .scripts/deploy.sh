@@ -1,31 +1,30 @@
 #!/bin/bash
 set -e
 
-echo "Deployment started ..."
+echo "Starting Deployment..."
 
-# Enter maintenance mode or return true
-# if already is in maintenance mode
-(php artisan down) || true
+# Set proper permissions
+sudo chmod -R 755 /var/www/html/tasks/
 
-# Pull the latest version of the app
-git pull origin master
+# Navigate to the project directory
+cd /var/www/html/tasks
 
 # Install composer dependencies
-composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
+composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Clear the old cache
-php artisan clear-compiled
+# Move .env.local to .env if needed
+if [ -f ".env.local" ]; then
+  sudo mv .env.local .env
+fi
 
-# Recreate cache
-php artisan optimize
+# Set permissions again (optional)
+sudo chmod -R 755 /var/www/html/tasks/
 
-# Compile npm assets
-npm run install && npm run build
+# Run database migrations and seed the database
+php artisan migrate --seed --force
 
-# Run database migrations
-php artisan migrate --seed
+# Install npm dependencies and build assets
+npm install
+npm run build
 
-# Exit maintenance mode
-php artisan up
-
-echo "Deployment finished!"
+echo "Deployment Finished!"
