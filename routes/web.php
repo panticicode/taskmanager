@@ -21,6 +21,9 @@ Route::get('/', function () {
 Route::get('/test', function () {
     return 123;
 });
+Route::get('/test1', function () {
+    return 123456;
+});
 Auth::routes();
 
 Route::get('/dashboard', [HomeController::class, 'index'])->name('home');
