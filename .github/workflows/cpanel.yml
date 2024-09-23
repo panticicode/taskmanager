@@ -1,8 +1,9 @@
 name: Publish Website to CPanel
 on:
-  push:
+  pull_request:
+    types: [closed]
     branches:
-      - production
+      - master
 jobs:
   FTP-Deploy-Action:
     name: FTP-Deploy-Action
