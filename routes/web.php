@@ -18,6 +18,9 @@ use App\Http\Controllers\HomeController;
 Route::get('/', function () {
     return view('welcome');
 });
+Route::get('/test', function () {
+    return 123;
+});
 Auth::routes();
 
 Route::get('/dashboard', [HomeController::class, 'index'])->name('home');
